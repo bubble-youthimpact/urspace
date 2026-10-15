@@ -39,36 +39,55 @@
     if (dnote) dnote.remove();
   }
 
-  /* Design uploads: a regular form post to FormSubmit with the file attached.
-     FormSubmit emails it, then sends the visitor back here with #sent-design. */
+  /* Design uploads: a regular file-upload post to FormSubmit, sent into a
+     hidden frame so the visitor stays on URSPACE. Resolves once FormSubmit
+     has answered. */
   function sendDesignByEmail(data) {
-    var site = (window.URS_SITES || []).find(function (s) { return s.id === data.location; });
-    var back = location.origin + location.pathname + "#sent-design";
-    var fields = {
-      "_subject": "URSPACE design submission: " + (data.designName || "") + " (" + (data.designer || "") + ")",
-      "_template": "table",
-      "_captcha": "false",
-      "_next": back,
-      "Designer name": data.designer,
-      "Design location": site ? site.name + " · " + site.location : t("apply.locationOther"),
-      "Design name": data.designName,
-      "Description": data.description,
-      "Phone": data.phone || "-",
-      "email": data.email,
-      "Language": document.documentElement.lang
-    };
-    var f = document.createElement("form");
-    f.method = "POST"; f.enctype = "multipart/form-data"; f.hidden = true;
-    f.action = "https://formsubmit.co/" + encodeURIComponent(CFG.designEmail);
-    Object.keys(fields).forEach(function (k) {
-      var i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = fields[k]; f.appendChild(i);
+    return new Promise(function (resolve, reject) {
+      var site = (window.URS_SITES || []).find(function (s) { return s.id === data.location; });
+      var fields = {
+        "_subject": "URSPACE design submission: " + (data.designName || "") + " (" + (data.designer || "") + ")",
+        "_template": "table",
+        "_captcha": "false",
+        "_replyto": data.email,
+        "Designer name": data.designer,
+        "Design location": site ? site.name + " · " + site.location : t("apply.locationOther"),
+        "Design name": data.designName,
+        "Description": data.description,
+        "Phone": data.phone || "-",
+        "email": data.email,
+        "Language": document.documentElement.lang
+      };
+      var name = "fs-design-" + Date.now();
+      var frame = document.createElement("iframe");
+      frame.name = name; frame.hidden = true; frame.setAttribute("aria-hidden", "true");
+      frame.title = "upload";
+      document.body.appendChild(frame);
+
+      var f = document.createElement("form");
+      f.method = "POST"; f.enctype = "multipart/form-data"; f.hidden = true; f.target = name;
+      f.action = "https://formsubmit.co/" + encodeURIComponent(CFG.designEmail);
+      Object.keys(fields).forEach(function (k) {
+        var i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = fields[k]; f.appendChild(i);
+      });
+      var fileInput = document.createElement("input");
+      fileInput.type = "file"; fileInput.name = "attachment";
+      var dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
+      f.appendChild(fileInput);
+      document.body.appendChild(f);
+
+      var finished = false;
+      function finish(ok) {
+        if (finished) return; finished = true;
+        clearTimeout(timer);
+        setTimeout(function () { f.remove(); frame.remove(); }, 1000);
+        ok ? resolve() : reject(new Error("send"));
+      }
+      // Listen only after the empty frame has been added, so its first blank load doesn't count
+      frame.addEventListener("load", function () { finish(true); });
+      var timer = setTimeout(function () { finish(false); }, 120000);
+      f.submit();
     });
-    var fileInput = document.createElement("input");
-    fileInput.type = "file"; fileInput.name = "attachment";
-    var dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
-    f.appendChild(fileInput);
-    document.body.appendChild(f);
-    f.submit();
   }
 
   /* ---------- Tabs ---------- */
@@ -93,7 +112,11 @@
     });
   });
   showTab(params.get("tab") === "education" ? "education" : "design");
-  var cameBackFromFormSubmit = hash === "sent-design";
+  // A link to the other tab from this same page (e.g. apply.html#education)
+  window.addEventListener("hashchange", function () {
+    var h = location.hash.slice(1);
+    if (h === "education" || h === "design") showTab(h);
+  });
 
   /* ---------- Design location list (from data-places.js) ---------- */
   function fillSites() {
@@ -137,7 +160,12 @@
   function success(form, type) {
     var card = form.parentElement;
     card.innerHTML = '<div class="success" role="status"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' +
-      "<h2>" + esc(t("apply.done")) + "</h2><p>" + esc(t("apply.doneBody")) + '</p><a class="btn ghost" href="apply.html#' + type + '">' + esc(t("apply.another")) + "</a></div>";
+      "<h2>" + esc(t("apply.done")) + "</h2><p>" + esc(t("apply.doneBody")) + '</p><button type="button" class="btn ghost" data-again>' + esc(t("apply.another")) + "</button></div>";
+    // Start a fresh, empty form on the same tab
+    card.querySelector("[data-again]").addEventListener("click", function () {
+      try { history.replaceState(null, "", "#" + type); } catch (e) {}
+      location.reload();
+    });
     card.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
@@ -157,17 +185,15 @@
         var site = (window.URS_SITES || []).find(function (s) { return s.id === data.location; });
         data.locationName = site ? site.name : data.location;
       }
-      if (type === "design" && CFG.designEmail && canFormSubmit) {
-        try { return sendDesignByEmail(data); }
-        catch (err) { F.busy(btn, false); msg.textContent = t("err.send"); msg.hidden = false; return; }
-      }
-      api.submitApplication(type, data, type === "design" ? file : null)
+      var sending = (type === "design" && CFG.designEmail && canFormSubmit)
+        ? sendDesignByEmail(data)
+        : api.submitApplication(type, data, type === "design" ? file : null);
+      sending
         .then(function () { success(form, type); })
-        .catch(function () { F.busy(btn, false); msg.textContent = t(type === "education" ? "err.send" : "err.generic"); msg.hidden = false; });
+        .catch(function () { F.busy(btn, false); msg.textContent = t("err.send"); msg.hidden = false; });
     });
   }
   wire($("form-design"), "design");
-  if (cameBackFromFormSubmit) success($("form-design"), "design");
   wire($("form-education"), "education");
 
   document.addEventListener("urs:lang", function () { fillSites(); paintAside(); });
