@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case Studies · URSPACE</title>
+<meta name="description" content="Regeneration projects from around the world: what each set out to fix, whether it worked, and what it teaches us.">
+<meta name="theme-color" content="#0B4F24">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=20261015e">
+<link rel="stylesheet" href="assets/css/case-studies.css?v=20261015e">
+</head>
+<body data-page="cases" data-title="nav.cases">
+<div id="site-header"></div>
+
+<main id="main">
+  <div class="wrap">
+    <header class="cs-intro">
+      <span class="pill" data-i18n="cs.pill"></span>
+      <h1 data-i18n="cs.title"></h1>
+      <p class="lede" data-i18n="cs.lede"></p>
+      <p class="cs-note" data-i18n="cs.langNote"></p>
+
+      <div class="cs-tl-card">
+        <div class="cs-tl-head">
+          <div>
+            <h2 data-i18n="cs.tlTitle"></h2>
+            <p data-i18n="cs.tlHint"></p>
+          </div>
+          <div class="cs-legend">
+            <span><i class="o-success"></i><span data-i18n="cs.success"></span></span>
+            <span><i class="o-mixed"></i><span data-i18n="cs.mixed"></span></span>
+            <span><i class="o-failure"></i><span data-i18n="cs.failure"></span></span>
+          </div>
+        </div>
+        <div class="cs-tl-scroll"><div class="cs-tl" id="cs-tl"><div class="cs-tip" id="cs-tip"></div></div></div>
+      </div>
+    </header>
+
+    <div class="cs-controls">
+      <div class="cs-ctl-row">
+        <label class="cs-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="cs-q" type="search" data-i18n-ph="cs.search" data-i18n-aria="cs.search">
+        </label>
+        <div class="cs-seg" role="group" aria-label="Filter by outcome" id="cs-seg">
+          <button type="button" data-o="all" aria-pressed="true" data-i18n="cs.all"></button>
+          <button type="button" data-o="success" aria-pressed="false" data-i18n="cs.success"></button>
+          <button type="button" data-o="mixed" aria-pressed="false" data-i18n="cs.mixed"></button>
+          <button type="button" data-o="failure" aria-pressed="false" data-i18n="cs.failure"></button>
+        </div>
+        <select class="cs-select" id="cs-theme" aria-label="Project type"></select>
+        <select class="cs-select" id="cs-region" aria-label="Region"></select>
+        <select class="cs-select" id="cs-sort" aria-label="Sort">
+          <option value="year-asc" data-i18n="cs.sortOld"></option>
+          <option value="year-desc" data-i18n="cs.sortNew"></option>
+          <option value="name" data-i18n="cs.sortName"></option>
+          <option value="report" data-i18n="cs.sortReport"></option>
+        </select>
+      </div>
+      <div class="cs-meta">
+        <span id="cs-count" aria-live="polite"></span>
+        <button type="button" class="textlink" id="cs-reset" hidden data-i18n="cs.clear"></button>
+      </div>
+    </div>
+
+    <div class="cs-grid" id="cs-grid"></div>
+  </div>
+</main>
+
+<div class="cs-scrim" id="cs-scrim"></div>
+<aside class="cs-drawer" id="cs-drawer" role="dialog" aria-modal="true" aria-labelledby="cs-dtitle" aria-hidden="true">
+  <div class="cs-d-head">
+    <div class="cs-d-bar">
+      <span id="cs-dbadge"></span>
+      <div class="cs-d-nav">
+        <button class="cs-iconbtn" id="cs-prev" data-i18n-aria="cs.prev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="cs-iconbtn" id="cs-next" data-i18n-aria="cs.next"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+        <button class="cs-iconbtn" id="cs-close" data-i18n-aria="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <h2 class="cs-d-title" id="cs-dtitle"></h2>
+    <p class="cs-d-sub" id="cs-dsub"></p>
+    <div class="cs-tabs" role="tablist" id="cs-tabs">
+      <button role="tab" data-t="overview" aria-selected="true" data-i18n="cs.tabOverview"></button>
+      <button role="tab" data-t="outcomes" aria-selected="false" data-i18n="cs.tabOutcomes"></button>
+      <button role="tab" data-t="lessons" aria-selected="false" data-i18n="cs.tabLessons"></button>
+      <button role="tab" data-t="report" aria-selected="false" data-i18n="cs.tabReport"></button>
+    </div>
+  </div>
+  <div class="cs-d-body" id="cs-dbody" role="tabpanel" tabindex="0"></div>
+</aside>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/config.js?v=20261015e"></script>
+<script src="assets/js/i18n.js?v=20261015e"></script>
+<script src="assets/js/services.js?v=20261015e"></script>
+<script src="assets/js/layout.js?v=20261015e"></script>
+<script src="assets/js/data-cases.js?v=20261015e"></script>
+<script src="assets/js/pages/case-studies.js?v=20261015e"></script>
+</body>
+</html>

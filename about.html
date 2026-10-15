@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Us · URSPACE</title>
+<meta name="description" content="URSPACE is a global platform where anyone can freely share and access environmental and sustainable design ideas.">
+<meta name="theme-color" content="#0B4F24">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=20261015e">
+</head>
+<body data-page="about" data-title="about.title">
+<div id="site-header"></div>
+
+<main id="main">
+  <header class="about-hero">
+    <div class="grid-bg grid-fade" aria-hidden="true"></div>
+    <div class="wrap">
+      <div>
+        <span class="pill" data-i18n="about.title"></span>
+        <h1 data-i18n="about.what.title"></h1>
+        <p data-i18n="about.what.body"></p>
+        <a class="btn" id="brochure-btn" href="#" download target="_blank" rel="noopener" hidden data-i18n="about.brochure"></a>
+      </div>
+      <div class="photo">
+        <img src="assets/img/about-what.webp" alt="Looking up at a tree through a glass courtyard" width="1000" height="667">
+        <span class="tag"><span class="pin"></span><span data-i18n="about.tag"></span></span>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2 data-i18n="about.glance"></h2></div>
+      <div class="trio">
+        <article>
+          <img src="assets/img/about-why.webp" alt="Sunlight falling into an abandoned glass hall" loading="lazy" width="1000" height="667">
+          <h3 data-i18n="about.why.title"></h3>
+          <p data-i18n="about.why.body"></p>
+        </article>
+        <article>
+          <img src="assets/img/about-different.webp" alt="Two people reviewing a project plan" loading="lazy" width="1000" height="667">
+          <h3 data-i18n="about.diff.title"></h3>
+          <p data-i18n="about.diff.body"></p>
+        </article>
+        <article>
+          <img src="assets/img/about-who.webp" alt="Someone sketching beside a model of a green city" loading="lazy" width="1000" height="667">
+          <h3 data-i18n="about.who.title"></h3>
+          <p data-i18n="about.who.body"></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="vision-band">
+        <img src="assets/img/about-vision.webp" alt="" loading="lazy" width="1000" height="667">
+        <div class="inner">
+          <h2 data-i18n="about.vision.title"></h2>
+          <p data-i18n="about.vision.body"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tint" id="brochure" hidden>
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="about.brochureTitle"></h2>
+          <p data-i18n="about.brochureLede"></p>
+        </div>
+        <div class="bro-actions">
+          <a class="btn" id="bro-dl" href="#" download target="_blank" rel="noopener">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            <span data-i18n="about.brochureDl"></span>
+          </a>
+          <a class="textlink" id="bro-other" href="#" download target="_blank" rel="noopener" data-i18n="about.brochureOther"></a>
+        </div>
+      </div>
+      <div class="bro-grid" id="bro-grid"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2 class="h2 center-head" data-i18n="about.team"></h2>
+      <article class="team-card">
+        <div class="who">
+          <img src="assets/img/avatar-placeholder.webp" alt="" width="150" height="150" loading="lazy">
+          <h3>Umin Lee</h3>
+          <p data-i18n="about.founder.role"></p>
+        </div>
+        <div class="bio">
+          <p data-i18n="about.founder.bio1"></p>
+          <p data-i18n="about.founder.bio2"></p>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<div class="modal bro-viewer" id="bro-viewer" role="dialog" aria-modal="true" aria-label="Brochure" aria-hidden="true">
+  <div class="bro-stage">
+    <button type="button" class="modal-close" id="bro-close" data-i18n-aria="common.close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <img id="bro-img" alt="">
+    <div class="bro-bar">
+      <button type="button" class="bro-nav" id="bro-prev" data-i18n-aria="about.brochurePrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span id="bro-count" aria-live="polite"></span>
+      <button type="button" class="bro-nav" id="bro-next" data-i18n-aria="about.brochureNext"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/config.js?v=20261015e"></script>
+<script src="assets/js/i18n.js?v=20261015e"></script>
+<script src="assets/js/services.js?v=20261015e"></script>
+<script src="assets/js/layout.js?v=20261015e"></script>
+<script src="assets/js/pages/about.js?v=20261015e"></script>
+</body>
+</html>
