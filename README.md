@@ -14,6 +14,7 @@ A plain HTML/CSS/JavaScript site with no build step. Upload the folder anywhere 
 | `case-studies.html` | Case Studies |
 | `apply.html` | Apply (`#education` opens the Education tab, `#site-sajeong` preselects a site) |
 | `login.html`, `signup.html` | Accounts |
+| `profile.html` | My profile: basic info and application status (logged-in only) |
 | `privacy.html`, `terms.html` | Privacy Policy and Terms of Service (English and Korean, edited directly in each file) |
 | `404.html` | Shown for broken links on GitHub Pages |
 
@@ -33,6 +34,7 @@ The header, mobile menu and footer are built once in `assets/js/layout.js`, so a
 - **Log in / sign up / Google / password reset:** Firebase Authentication (project `urspace-e2a51`, settings in `config.js`).
 - **Comments:** Cloud Firestore. Paste `firestore.rules` into Firebase console → Firestore Database → Rules. Only the author can delete a comment.
 - **Education applications and design uploads:** emailed through FormSubmit to the address in `config.js` (`educationEmail`, `designEmail`). Design files can be up to 10 MB. The first submission of each sends an activation email; click its link once.
+- **Application status:** when someone applies while logged in, a record is saved in Firestore → `applications` and shown on their profile. To update it, open the record in the Firebase console and change `status` to `received`, `reviewing`, `accepted` or `declined`. Add a text field called `note` to show them a short message.
 - If Firebase or FormSubmit can't be reached (for example on your computer or in a preview), the site falls back to preview mode and says so on the form.
 
 ## Publishing on GitHub Pages
@@ -44,7 +46,7 @@ The header, mobile menu and footer are built once in `assets/js/layout.js`, so a
 
 ## After you change a file
 
-Browsers keep old copies of scripts and styles. Each page loads them with `?v=20261015e` at the end. When you publish changes, change that number in every `.html` file (for example to `?v=20261102`) so visitors get the new version.
+Browsers keep old copies of scripts and styles. Each page loads them with `?v=20261015h` at the end. When you publish changes, change that number in every `.html` file (for example to `?v=20261102`) so visitors get the new version.
 
 ## Clean addresses
 

@@ -26,6 +26,40 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // Profile details (phone, organization). Only the owner can see or change them.
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['name', 'phone', 'org', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.phone is string && request.resource.data.phone.size() <= 40
+        && request.resource.data.org is string && request.resource.data.org.size() <= 120
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // Application records, so people can follow their applications on their profile.
+    // The applications themselves are emailed. Status and notes are changed by the
+    // URSPACE team in the Firebase console, which these rules don't restrict.
+    match /applications/{appId} {
+      // Each person sees only their own
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+
+      // New records start as "received" and belong to whoever sent them
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['type', 'title', 'siteId', 'siteName', 'uid', 'status', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.type in ['design', 'education']
+        && request.resource.data.status == 'received'
+        && request.resource.data.title is string && request.resource.data.title.size() <= 120
+        && request.resource.data.siteId is string && request.resource.data.siteId.size() <= 60
+        && request.resource.data.siteName is string && request.resource.data.siteName.size() <= 120
+        && request.resource.data.createdAt == request.time;
+
+      // Applicants can't change or remove a record (so they can't mark themselves accepted)
+      allow update, delete: if false;
+    }
+
     // Everything else is closed
     match /{document=**} {
       allow read, write: if false;

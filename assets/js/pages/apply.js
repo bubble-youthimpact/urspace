@@ -101,6 +101,7 @@
       $("panel-" + b.getAttribute("data-tab")).hidden = !on;
     });
     try { history.replaceState(null, "", "#" + name); } catch (e) {}
+    if (typeof paintTrackNotes === "function" && document.querySelector(".track-note")) paintTrackNotes();
   }
   tabs.forEach(function (b) {
     b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
@@ -160,7 +161,9 @@
   function success(form, type) {
     var card = form.parentElement;
     card.innerHTML = '<div class="success" role="status"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' +
-      "<h2>" + esc(t("apply.done")) + "</h2><p>" + esc(t("apply.doneBody")) + '</p><button type="button" class="btn ghost" data-again>' + esc(t("apply.another")) + "</button></div>";
+      "<h2>" + esc(t("apply.done")) + "</h2><p>" + esc(t("apply.doneBody")) + '</p><div class="ae-acts">' +
+      (api.currentUser() ? '<a class="btn" href="profile.html">' + esc(t("apply.doneTrack")) + "</a>" : "") +
+      '<button type="button" class="btn ghost" data-again>' + esc(t("apply.another")) + "</button></div></div>";
     // Start a fresh, empty form on the same tab
     card.querySelector("[data-again]").addEventListener("click", function () {
       try { history.replaceState(null, "", "#" + type); } catch (e) {}
@@ -189,12 +192,58 @@
         ? sendDesignByEmail(data)
         : api.submitApplication(type, data, type === "design" ? file : null);
       sending
+        .then(function () { return trackIt(type, data); })
         .then(function () { success(form, type); })
         .catch(function () { F.busy(btn, false); msg.textContent = t("err.send"); msg.hidden = false; });
     });
   }
+  /* ---------- Following applications on the profile page ---------- */
+  // Keep a record for logged-in visitors. Never holds up the "sent" message
+  // for more than a few seconds.
+  function trackIt(type, data) {
+    if (!api.currentUser()) return Promise.resolve();
+    var site = (window.URS_SITES || []).find(function (s) { return s.id === data.location; });
+    var rec = api.recordApplication(type, {
+      title: type === "design" ? data.designName : "",
+      siteId: type === "design" ? data.location : "",
+      siteName: type === "design" ? (site ? site.name : t("apply.locationOther")) : ""
+    });
+    return Promise.race([rec, new Promise(function (r) { setTimeout(r, 4000); })]);
+  }
+
+  // A line above each Submit button: saved to your profile / log in to follow it
+  function paintTrackNotes() {
+    var user = api.currentUser();
+    document.querySelectorAll("#form-design, #form-education").forEach(function (form) {
+      var note = form.querySelector(".track-note");
+      if (!note) {
+        note = document.createElement("p"); note.className = "track-note";
+        form.insertBefore(note, form.querySelector(".form-actions"));
+      }
+      var html = t(user ? "apply.trackIn" : "apply.trackOut");
+      if (!user) html = html.replace("login.html?next=apply.html", "login.html?next=" + encodeURIComponent("apply.html#" + currentTab));
+      note.innerHTML = html;
+    });
+  }
+
+  // Fill in name, email and phone from the profile (only empty fields)
+  var prefilled = false;
+  function prefill() {
+    if (prefilled || !api.currentUser()) return;
+    prefilled = true;
+    api.getProfile().then(function (p) {
+      [["d-designer", p.name], ["d-email", p.email], ["d-phone", p.phone],
+       ["e-name", p.name], ["e-email", p.email], ["e-phone", p.phone]].forEach(function (pair) {
+        var el = $(pair[0]); if (el && !el.value && pair[1]) el.value = pair[1];
+      });
+    }).catch(function () { prefilled = false; });
+  }
+
   wire($("form-design"), "design");
   wire($("form-education"), "education");
 
-  document.addEventListener("urs:lang", function () { fillSites(); paintAside(); });
+  paintTrackNotes();
+  (api.authReady || Promise.resolve()).then(function () { paintTrackNotes(); prefill(); });
+  document.addEventListener("urs:auth", function () { paintTrackNotes(); prefill(); });
+  document.addEventListener("urs:lang", function () { fillSites(); paintAside(); paintTrackNotes(); });
 })();

@@ -45,8 +45,15 @@
     });
   }
   function toUser(u) {
-    return u ? { name: u.displayName || (u.email || "").split("@")[0], email: u.email || "", uid: u.uid } : null;
+    if (!u) return null;
+    var providers = (u.providerData || []).map(function (p) { return p.providerId; });
+    return {
+      name: u.displayName || (u.email || "").split("@")[0], email: u.email || "", uid: u.uid,
+      hasPassword: providers.indexOf("password") >= 0,
+      createdAt: u.metadata && u.metadata.creationTime ? new Date(u.metadata.creationTime).toISOString() : null
+    };
   }
+  function iso(ts) { return ts && ts.toDate ? ts.toDate().toISOString() : (ts || new Date().toISOString()); }
   // Resolves to the Firebase auth object, or null if Firebase isn't set up or can't load
   var fbReady = !fbWanted ? Promise.resolve(null) :
     loadScript("https://www.gstatic.com/firebasejs/" + FB_VERSION + "/firebase-app-compat.js")
@@ -139,7 +146,7 @@
         var db = load(); db.users = db.users || {};
         var key = email.toLowerCase();
         if (db.users[key]) throw new Error("exists");
-        db.users[key] = { name: name, email: key, pw: hash(password) };
+        db.users[key] = { name: name, email: key, pw: hash(password), hasPassword: true, createdAt: new Date().toISOString() };
         db.session = key; save(db); emit();
         return db.users[key];
       }); });
@@ -232,6 +239,102 @@
         var i = list.findIndex(function (c) { return c.id === id && c.email === u.email; });
         if (i < 0) throw new Error("not-yours");
         list.splice(i, 1); save(db);
+      });
+    },
+
+    /* ---------- Profile ----------
+       With Firebase: name lives on the account itself; phone and organization
+       in Firestore "users/{uid}" (only the owner can read or change it). */
+    getProfile: function () {
+      var u = this.currentUser();
+      if (!u) return Promise.reject(new Error("auth"));
+      return fbReady.then(function (auth) {
+        var base = { name: u.name || "", email: u.email, phone: "", org: "", hasPassword: !!u.hasPassword, createdAt: u.createdAt || null };
+        if (auth && fbDb) {
+          return fbDb.collection("users").doc(u.uid).get().then(function (doc) {
+            var d = doc.exists ? doc.data() : {};
+            base.phone = d.phone || ""; base.org = d.org || "";
+            return base;
+          }).catch(function () { return base; });
+        }
+        var rec = (load().users || {})[u.email] || {};
+        base.phone = rec.phone || ""; base.org = rec.org || "";
+        return base;
+      });
+    },
+    saveProfile: function (p) {
+      var u = this.currentUser();
+      if (!u) return Promise.reject(new Error("auth"));
+      var clean = { name: String(p.name || "").slice(0, 80), phone: String(p.phone || "").slice(0, 40), org: String(p.org || "").slice(0, 120) };
+      return fbReady.then(function (auth) {
+        if (auth && fbDb) {
+          return auth.currentUser.updateProfile({ displayName: clean.name })
+            .then(function () {
+              return fbDb.collection("users").doc(u.uid).set({
+                name: clean.name, phone: clean.phone, org: clean.org,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            })
+            .then(function () { fbUser = toUser(auth.currentUser); emit(); return true; });
+        }
+        return wait(400).then(function () {
+          var db = load(), rec = (db.users || {})[u.email];
+          if (!rec) throw new Error("auth");
+          rec.name = clean.name; rec.phone = clean.phone; rec.org = clean.org;
+          save(db); emit(); return true;
+        });
+      });
+    },
+    // Email-and-password accounts can get a link to set a new password
+    sendPasswordChange: function () {
+      var u = this.currentUser();
+      if (!u) return Promise.reject(new Error("auth"));
+      return this.resetPassword(u.email);
+    },
+
+    /* ---------- Application tracking ----------
+       Applications are still emailed through FormSubmit. When the person is
+       logged in, a short record is also kept in Firestore "applications" so they
+       can follow it on their profile. The URSPACE team changes "status" in the
+       Firebase console: received → reviewing → accepted / declined. An optional
+       "note" field is shown to the applicant as a message from URSPACE. */
+    recordApplication: function (type, info) {
+      var u = this.currentUser();
+      if (!u) return Promise.resolve(false);
+      var rec = {
+        type: type === "design" ? "design" : "education",
+        title: String(info.title || "").slice(0, 120),
+        siteId: String(info.siteId || "").slice(0, 60),
+        siteName: String(info.siteName || "").slice(0, 120)
+      };
+      return fbReady.then(function (auth) {
+        if (auth && fbDb) {
+          rec.uid = u.uid; rec.status = "received";
+          rec.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          return fbDb.collection("applications").add(rec).then(function () { return true; });
+        }
+        var db = load(); db.tracked = db.tracked || {};
+        (db.tracked[u.email] = db.tracked[u.email] || []).push(Object.assign({ id: "a" + Date.now(), status: "received", createdAt: new Date().toISOString() }, rec));
+        save(db); return true;
+      }).catch(function () { return false; });   // never block the "sent" message
+    },
+    listApplications: function () {
+      var u = this.currentUser();
+      if (!u) return Promise.reject(new Error("auth"));
+      return fbReady.then(function (auth) {
+        var list;
+        if (auth && fbDb) {
+          return fbDb.collection("applications").where("uid", "==", u.uid).get().then(function (snap) {
+            list = [];
+            snap.forEach(function (doc) {
+              var d = doc.data();
+              list.push({ id: doc.id, type: d.type, title: d.title, siteId: d.siteId, siteName: d.siteName, status: d.status || "received", note: d.note || "", createdAt: iso(d.createdAt) });
+            });
+            return list.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+          });
+        }
+        list = ((load().tracked || {})[u.email] || []).slice();
+        return list.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
       });
     },
 

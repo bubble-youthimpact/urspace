@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My profile · URSPACE</title>
+<meta name="theme-color" content="#0B4F24">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css?v=20261015h">
+</head>
+<body data-page="profile" data-no-join data-title="profile.title">
+<div id="site-header"></div>
+
+<main id="main">
+  <header class="page-head profile-head">
+    <div class="grid-bg grid-fade" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="ph-row">
+        <div class="ph-id">
+          <span class="ph-av" id="p-avatar" aria-hidden="true"></span>
+          <div>
+            <h1 id="p-name" data-i18n="profile.loading"></h1>
+            <p class="ph-meta"><span id="p-email"></span><span id="p-since"></span></p>
+          </div>
+        </div>
+        <button type="button" class="btn ghost sm" data-logout data-i18n="profile.logout"></button>
+      </div>
+      <dl class="pstats" aria-live="polite">
+        <div><dt data-i18n="profile.statTotal"></dt><dd id="n-total">–</dd></div>
+        <div><dt data-i18n="profile.statReview"></dt><dd id="n-review">–</dd></div>
+        <div><dt data-i18n="profile.statAccepted"></dt><dd id="n-accepted">–</dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <div class="wrap profile-layout">
+    <!-- Applications -->
+    <section class="profile-apps" aria-labelledby="apps-title">
+      <div class="pa-head">
+        <h2 id="apps-title" data-i18n="profile.appsTitle"></h2>
+        <p data-i18n="profile.appsIntro"></p>
+      </div>
+      <div id="apps-list" class="apps-list" aria-busy="true">
+        <div class="app-skel"></div><div class="app-skel"></div>
+      </div>
+      <details class="status-help">
+        <summary data-i18n="profile.statusHelp"></summary>
+        <ul>
+          <li><span class="status received" data-i18n="status.received"></span><span data-i18n="status.receivedHelp"></span></li>
+          <li><span class="status reviewing" data-i18n="status.reviewing"></span><span data-i18n="status.reviewingHelp"></span></li>
+          <li><span class="status accepted" data-i18n="status.accepted"></span><span data-i18n="status.acceptedHelp"></span></li>
+          <li><span class="status declined" data-i18n="status.declined"></span><span data-i18n="status.declinedHelp"></span></li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- Account -->
+    <aside class="profile-side">
+      <div class="form-card">
+        <form id="form-profile" novalidate>
+          <h2 data-i18n="profile.infoTitle"></h2>
+          <p class="intro" data-i18n="profile.infoIntro"></p>
+          <div class="notice" data-demo-note="auth" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span data-i18n="common.demo"></span></div>
+          <div class="field" data-required>
+            <label for="p-in-name"><span data-i18n="profile.name"></span><span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="p-in-name" name="name" autocomplete="name" maxlength="80" required>
+            <p class="err" data-i18n="err.required"></p>
+          </div>
+          <div class="field">
+            <label for="p-in-email" data-i18n="profile.email"></label>
+            <input class="input" id="p-in-email" type="email" readonly aria-describedby="p-email-note">
+            <p class="field-note" id="p-email-note" data-i18n="profile.emailNote"></p>
+          </div>
+          <div class="field">
+            <label for="p-in-phone"><span data-i18n="profile.phone"></span><span class="opt" data-i18n="apply.optional"></span></label>
+            <input class="input" id="p-in-phone" name="phone" type="tel" autocomplete="tel" maxlength="40">
+          </div>
+          <div class="field">
+            <label for="p-in-org"><span data-i18n="profile.org"></span><span class="opt" data-i18n="apply.optional"></span></label>
+            <input class="input" id="p-in-org" name="org" autocomplete="organization" maxlength="120" data-i18n-ph="profile.orgPh">
+          </div>
+          <div class="form-actions"><button class="btn block" type="submit" data-i18n="profile.save" disabled></button></div>
+          <p class="form-msg info" id="save-ok" role="status" hidden data-i18n="profile.saved"></p>
+          <p class="form-msg error" id="save-err" role="alert" hidden data-i18n="profile.saveErr"></p>
+        </form>
+      </div>
+
+      <div class="side-card">
+        <h3 data-i18n="profile.pwTitle"></h3>
+        <div id="pw-email">
+          <p data-i18n="profile.pwBody"></p>
+          <button type="button" class="btn ghost sm" id="pw-btn" data-i18n="profile.pwBtn"></button>
+          <p class="form-msg info" id="pw-sent" role="status" hidden data-i18n="profile.pwSent"></p>
+        </div>
+        <p id="pw-google" hidden data-i18n="profile.pwGoogle"></p>
+      </div>
+
+      <div class="side-card">
+        <h3 data-i18n="profile.deleteTitle"></h3>
+        <p data-i18n="profile.deleteBody"></p>
+        <a class="textlink" id="delete-link" href="#" data-i18n="profile.deleteBtn"></a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/config.js?v=20261015h"></script>
+<script src="assets/js/i18n.js?v=20261015h"></script>
+<script src="assets/js/services.js?v=20261015h"></script>
+<script src="assets/js/layout.js?v=20261015h"></script>
+<script src="assets/js/data-places.js?v=20261015h"></script>
+<script src="assets/js/forms.js?v=20261015h"></script>
+<script src="assets/js/pages/profile.js?v=20261015h"></script>
+</body>
+</html>

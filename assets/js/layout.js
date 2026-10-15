@@ -96,9 +96,13 @@
       var mobile = slot.getAttribute("data-auth-slot") === "mobile";
       if (user) {
         var initial = esc((user.name || user.email).trim().charAt(0).toUpperCase());
+        var first = esc((user.name || user.email).trim().split(/\s+/)[0]);
+        var onProfile = document.body.getAttribute("data-page") === "profile";
         slot.innerHTML = mobile
-          ? '<div class="signin-note">' + esc(user.name) + " · " + esc(user.email) + '</div><button type="button" class="btn ghost" data-logout>' + esc(t("nav.logout")) + "</button>"
-          : '<button type="button" class="user-chip" data-logout title="' + esc(t("nav.logout")) + '"><span class="av">' + initial + "</span><span>" + esc(t("nav.logout")) + "</span></button>";
+          ? '<div class="signin-note">' + esc(user.name) + " · " + esc(user.email) + '</div>' +
+            '<a class="btn" href="profile.html">' + esc(t("nav.profile")) + '</a>' +
+            '<button type="button" class="btn ghost" data-logout>' + esc(t("nav.logout")) + "</button>"
+          : '<a class="user-chip" href="profile.html"' + (onProfile ? ' aria-current="page"' : "") + ' title="' + esc(t("nav.profile")) + '"><span class="av">' + initial + "</span><span>" + first + "</span></a>";
       } else {
         slot.innerHTML = '<a class="btn' + (mobile ? "" : " sm") + '" href="login.html">' + esc(t("nav.login")) + "</a>";
       }
@@ -237,7 +241,11 @@
 
   document.addEventListener("click", function (e) {
     if (e.target.closest("[data-lang-toggle]")) setLang(lang === "en" ? "ko" : "en");
-    if (e.target.closest("[data-logout]")) window.URS_API.signOut();
+    if (e.target.closest("[data-logout]")) {
+      window.URS_API.signOut().then(function () {
+        if (document.body.getAttribute("data-page") === "profile") location.href = "index.html";
+      });
+    }
   });
   document.addEventListener("urs:auth", renderAuthSlots);
 
