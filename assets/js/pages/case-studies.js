@@ -159,11 +159,26 @@
       (d.korea ? '<div class="cs-korea"><h4>' + esc(t("cs.koreaMeans")) + "</h4><p>" + esc(d.korea) + "</p></div>" : "");
     if (!d.report) return '<div class="cs-noreport"><h4>' + esc(t("cs.noReport")) + "</h4><p>" + esc(t("cs.noReportBody")) +
       '</p><button type="button" class="btn ghost" data-tab="lessons">' + esc(t("cs.readLessons")) + "</button></div>";
-    // Report: a short first line with no full stop becomes a heading
+    // Report: a short first line with no full stop becomes a heading.
+    // "Sources" becomes a numbered list with clickable links;
+    // "Overall Assessment" and "Evidence Limitations" get their own styling.
+    function linkify(text) {
+      return esc(text).replace(/https?:\/\/[^\s<]+[^\s<.,;)]/g, function (u) {
+        return '<a href="' + u + '" target="_blank" rel="noopener">' + u + "</a>";
+      });
+    }
     return '<div class="cs-report">' + d.report.split(/\n\s*\n/).map(function (blk) {
-      var lines = blk.trim().split("\n"), out = "";
-      if (lines.length > 1 && lines[0].length < 90 && !/[.!?]$/.test(lines[0])) out += "<h3>" + esc(lines.shift()) + "</h3>";
-      return out + lines.filter(Boolean).map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("");
+      var lines = blk.trim().split("\n"), head = "";
+      if (lines.length > 1 && lines[0].length < 90 && !/[.!?]$/.test(lines[0])) head = lines.shift().trim();
+      lines = lines.filter(Boolean);
+      var h = head ? "<h3>" + esc(head) + "</h3>" : "";
+      if (/^sources$/i.test(head))
+        return '<section class="cs-sources">' + h + "<ol>" + lines.map(function (l) { return "<li>" + linkify(l) + "</li>"; }).join("") + "</ol></section>";
+      if (/^overall assessment$/i.test(head))
+        return '<div class="cs-callout cs-overall">' + "<h4>" + esc(head) + "</h4>" + lines.map(function (l) { return "<p>" + linkify(l) + "</p>"; }).join("") + "</div>";
+      if (/^evidence limitations$/i.test(head))
+        return '<div class="cs-limits">' + "<h4>" + esc(head) + "</h4>" + lines.map(function (l) { return "<p>" + linkify(l) + "</p>"; }).join("") + "</div>";
+      return h + lines.map(function (l) { return "<p>" + linkify(l) + "</p>"; }).join("");
     }).join("") + "</div>";
   }
 
