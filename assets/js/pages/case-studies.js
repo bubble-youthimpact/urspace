@@ -27,7 +27,7 @@
   DATA.forEach(function (d, i) {
     d.id = i;
     var o = (d.outcome || "").toLowerCase();
-    d.o = /mixed/.test(o) ? "mixed" : /fail/.test(o) ? "failure" : "success";
+    d.o = /mixed|ongoing|uncertain/.test(o) ? "mixed" : /fail/.test(o) ? "failure" : "success";
     d.initial = /initial/.test(o);
     var y = (d.timeline || "").match(/\d{4}/); d.year = y ? +y[0] : null;
     d.themes = THEMES.filter(function (th) { return th.re.test(d.type); }).map(function (th) { return th.en; });
