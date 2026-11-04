@@ -91,9 +91,17 @@
       '<div class="cs-case-foot">' + (d.report ? '<span class="cs-has-report">' + check + esc(t("cs.hasReport")) + "</span>" : '<span class="cs-no-report">' + esc(t("cs.summary")) + "</span>") +
       '<span class="cs-open">' + esc(t("cs.read")) + "</span></div></button>";
   }
-  function render() {
+  var PAGE = 12, shown = PAGE;
+  function render(keepPage) {
     current = filtered();
-    $("cs-grid").innerHTML = current.length ? current.map(card).join("") :
+    if (!keepPage) shown = PAGE;
+    var more = $("cs-more"), left = current.length - shown;
+    more.hidden = left <= 0;
+    if (left > 0) {
+      $("cs-more-btn").textContent = t("cs.showMore", { n: Math.min(PAGE, left) });
+      $("cs-more-count").textContent = t("cs.showingOf", { n: shown, t: current.length });
+    }
+    $("cs-grid").innerHTML = current.length ? current.slice(0, shown).map(card).join("") :
       '<div class="cs-empty"><h3>' + esc(t("cs.empty")) + "</h3><p>" + esc(t("cs.emptyBody")) + '</p><button type="button" class="btn ghost sm" data-reset>' + esc(t("cs.clear")) + "</button></div>";
     var active = state.q || state.o !== "all" || state.theme || state.region;
     $("cs-count").textContent = t("cs.showing", { n: current.length, t: DATA.length });
@@ -154,7 +162,10 @@
         '<div class="cs-vbox cs-v-pos"><h4>' + esc(t("cs.good")) + "</h4><p>" + esc(d.positive || t("cs.notRecorded")) + "</p></div>" +
         '<div class="cs-vbox cs-v-neg"><h4>' + esc(t("cs.bad")) + "</h4><p>" + esc(d.negative || t("cs.notRecorded")) + "</p></div></div>" +
       block(t("cs.community"), d.community) + block(t("cs.mistakes"), d.mistakes);
-    if (tab === "lessons") return (d.recommendation ? '<div class="cs-callout"><h4>' + esc(t("cs.reco")) + "</h4><p>" + esc(d.recommendation) + "</p></div>" : "") +
+    var brief = (window.URS_BRIEFS || []).filter(function (b) { return (b.cases || []).indexOf(d.name) >= 0; })[0];
+    var briefLink = brief ? '<a class="cs-brief-link" href="case-studies.html?brief=' + encodeURIComponent(brief.id) + '"><span><b>' + esc(t("cs.briefTitle")) + ": " + esc(brief.title) + "</b>" + esc(t("cs.briefBody")) + "</span>" +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>' : "";
+    if (tab === "lessons") return briefLink + (d.recommendation ? '<div class="cs-callout"><h4>' + esc(t("cs.reco")) + "</h4><p>" + esc(d.recommendation) + "</p></div>" : "") +
       block(t("cs.lessons"), d.lessons) +
       (d.korea ? '<div class="cs-korea"><h4>' + esc(t("cs.koreaMeans")) + "</h4><p>" + esc(d.korea) + "</p></div>" : "");
     if (!d.report) return '<div class="cs-noreport"><h4>' + esc(t("cs.noReport")) + "</h4><p>" + esc(t("cs.noReportBody")) +
@@ -225,6 +236,10 @@
     var c = e.target.closest(".cs-case"); if (c) return openCase(c.dataset.id, c);
     if (e.target.closest("[data-reset]")) reset();
   });
+  $("cs-more-btn").addEventListener("click", function () {
+    var first = shown; shown += PAGE; render(true);
+    var next = $("cs-grid").children[first]; if (next) next.focus({ preventScroll: true });
+  });
   $("cs-q").addEventListener("input", function (e) { state.q = e.target.value; render(); });
   $("cs-seg").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
@@ -260,4 +275,86 @@
 
   fillSelects();
   drawTimeline();
+
+  // Policy briefs by theme
+  function firstSentence(x) { var i = x.indexOf(". "); return i > 0 ? x.slice(0, i + 1) : x; }
+  function drawBriefs() {
+    var el = $("cs-briefs"); if (!el) return;
+    var byName = {}; DATA.forEach(function (d) { byName[d.name] = d.o; });
+    el.innerHTML = (window.URS_BRIEFS || []).map(function (b) {
+      var n = { success: 0, mixed: 0, failure: 0 };
+      b.cases.forEach(function (c) { n[byName[c] || "mixed"]++; });
+      var bar = ["success", "mixed", "failure"].filter(function (k) { return n[k]; }).map(function (k) {
+        return '<i class="o-' + k + '" style="flex:' + n[k] + '"></i>';
+      }).join("");
+      return '<a class="cs-brief" data-brief="' + esc(b.id) + '" href="case-studies.html?brief=' + encodeURIComponent(b.id) + '">' +
+        '<span class="cs-brief-no">' + esc(b.no) + "</span>" +
+        '<span class="cs-brief-t">' + esc(b.title) + "</span>" +
+        '<span class="cs-brief-s">' + esc(firstSentence(b.summary)) + "</span>" +
+        '<span class="cs-brief-m"><span>' + esc(t("cs.briefCases", { n: b.cases.length })) + '</span><span class="cs-brief-bar" aria-hidden="true">' + bar + "</span>" +
+        '<span class="cs-brief-go">' + esc(t("cs.briefRead")) + "</span></span></a>";
+    }).join("");
+  }
+
+  // Brief panel
+  var openBrief = null, briefFocus = null;
+  function paintBrief() {
+    var b = (window.URS_BRIEFS || []).filter(function (x) { return x.id === openBrief; })[0];
+    if (!b || !window.URS_BRIEF_HTML) return;
+    $("pb-body").innerHTML = '<div class="pb-inpanel">' + window.URS_BRIEF_HTML(b) + "</div>";
+  }
+  function showBrief(id, from) {
+    briefFocus = from || document.activeElement; openBrief = id; paintBrief();
+    $("pb-body").scrollTop = 0;
+    $("pb-drawer").classList.add("on"); $("pb-scrim").classList.add("on");
+    $("pb-drawer").setAttribute("aria-hidden", "false");
+    document.body.classList.add("drawer-open");
+    setTimeout(function () { $("pb-close").focus({ preventScroll: true }); }, 50);
+  }
+  function hideBrief() {
+    $("pb-drawer").classList.remove("on"); $("pb-scrim").classList.remove("on");
+    $("pb-drawer").setAttribute("aria-hidden", "true");
+    if (openId === null) document.body.classList.remove("drawer-open");
+    openBrief = null; if (briefFocus && briefFocus.focus) briefFocus.focus({ preventScroll: true });
+  }
+  $("cs-briefs").addEventListener("click", function (e) {
+    var a = e.target.closest("[data-brief]"); if (!a) return;
+    e.preventDefault(); showBrief(a.dataset.brief, a);
+  });
+  $("pb-close").addEventListener("click", hideBrief);
+  // Print only the open brief
+  $("pb-print").addEventListener("click", function () {
+    document.body.classList.add("print-brief"); window.print();
+  });
+  window.addEventListener("afterprint", function () { document.body.classList.remove("print-brief"); });
+  $("pb-scrim").addEventListener("click", hideBrief);
+  // A case named inside a brief opens that case
+  $("pb-body").addEventListener("click", function (e) {
+    var a = e.target.closest('a[href*="case-studies"]'); if (!a) return;
+    e.preventDefault();
+    var m = /[?&]case=([^&]+)/.exec(a.getAttribute("href"));
+    var hit = m && DATA.filter(function (d) { return d.name === decodeURIComponent(m[1]); })[0];
+    hideBrief();
+    if (hit) openCase(hit.id);
+  });
+  // The "Read the policy brief" link inside a case opens the brief panel
+  $("cs-dbody").addEventListener("click", function (e) {
+    var a = e.target.closest(".cs-brief-link"); if (!a) return;
+    var m = /[?&]brief=([^&]+)/.exec(a.getAttribute("href")); if (!m) return;
+    e.preventDefault(); closeCase(); showBrief(decodeURIComponent(m[1]));
+  });
+  document.addEventListener("keydown", function (e) {
+    if (openBrief !== null && e.key === "Escape") hideBrief();
+  });
+  document.addEventListener("urs:lang", function () { if (openBrief) paintBrief(); });
+
+  drawBriefs();
+  document.addEventListener("urs:lang", drawBriefs);
+
+  // Open a case straight from a link like case-studies?case=Cheonggyecheon%20Restoration%20Project
+  var want = new URLSearchParams(location.search).get("case");
+  var hit = want && DATA.filter(function (d) { return d.name === want; })[0];
+  if (hit) openCase(hit.id);
+  var wantBrief = new URLSearchParams(location.search).get("brief");
+  if (wantBrief) showBrief(wantBrief);
 })();

@@ -11,8 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20261103a">
-<link rel="stylesheet" href="assets/css/case-studies.css?v=20261103a">
+<link rel="stylesheet" href="assets/css/style.css?v=20261104e">
+<link rel="stylesheet" href="assets/css/case-studies.css?v=20261104e">
+<link rel="stylesheet" href="assets/css/briefs.css?v=20261104e">
 </head>
 <body data-page="cases" data-title="nav.cases">
 <div id="site-header"></div>
@@ -68,8 +69,37 @@
     </div>
 
     <div class="cs-grid" id="cs-grid"></div>
+    <div class="cs-more" id="cs-more" hidden>
+      <button type="button" class="btn ghost" id="cs-more-btn"></button>
+      <span id="cs-more-count"></span>
+    </div>
   </div>
+
+  <section class="cs-briefs-band" aria-labelledby="cs-briefs-h">
+    <div class="wrap">
+      <div class="cs-briefs-head">
+        <div>
+          <span class="pill" data-i18n="cs.briefsPill"></span>
+          <h2 id="cs-briefs-h" data-i18n="cs.briefsTitle"></h2>
+          <p data-i18n="cs.briefsHint"></p>
+        </div>
+      </div>
+      <div class="cs-briefs-grid" id="cs-briefs"></div>
+    </div>
+  </section>
 </main>
+
+<!-- Policy brief panel -->
+<div class="cs-scrim" id="pb-scrim"></div>
+<aside class="cs-drawer cs-bdrawer" id="pb-drawer" role="dialog" aria-modal="true" aria-label="Policy brief" aria-hidden="true">
+  <div class="cs-bd-bar">
+    <button type="button" class="cs-bd-act" id="pb-print"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg><span data-i18n="pb.print"></span></button>
+    <div class="cs-d-nav">
+      <button class="cs-iconbtn" id="pb-close" data-i18n-aria="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+  <div class="cs-bd-body" id="pb-body" tabindex="0"></div>
+</aside>
 
 <div class="cs-scrim" id="cs-scrim"></div>
 <aside class="cs-drawer" id="cs-drawer" role="dialog" aria-modal="true" aria-labelledby="cs-dtitle" aria-hidden="true">
@@ -96,11 +126,13 @@
 
 <div id="site-footer"></div>
 
-<script src="assets/js/config.js?v=20261103a"></script>
-<script src="assets/js/i18n.js?v=20261103a"></script>
-<script src="assets/js/services.js?v=20261103a"></script>
-<script src="assets/js/layout.js?v=20261103a"></script>
-<script src="assets/js/data-cases.js?v=20261103a"></script>
-<script src="assets/js/pages/case-studies.js?v=20261103a"></script>
+<script src="assets/js/config.js?v=20261104e"></script>
+<script src="assets/js/i18n.js?v=20261104e"></script>
+<script src="assets/js/services.js?v=20261104e"></script>
+<script src="assets/js/layout.js?v=20261104e"></script>
+<script src="assets/js/data-cases.js?v=20261104e"></script>
+<script src="assets/js/data-briefs.js?v=20261104e"></script>
+<script src="assets/js/briefs.js?v=20261104e"></script>
+<script src="assets/js/pages/case-studies.js?v=20261104e"></script>
 </body>
 </html>
